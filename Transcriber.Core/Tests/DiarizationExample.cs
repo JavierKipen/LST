@@ -1,5 +1,5 @@
 ﻿// Licensed under the MIT license: https://opensource.org/licenses/MIT
-
+/*
 using Whisper.net.Ggml;
 using Whisper.net;
 using Whisper.net.Wave;
@@ -66,4 +66,5 @@ static async Task DownloadModel(string fileName, GgmlType ggmlType)
     using var modelStream = await WhisperGgmlDownloader.Default.GetGgmlModelAsync(ggmlType);
     using var fileWriter = File.OpenWrite(fileName);
     await modelStream.CopyToAsync(fileWriter);
-}
+}*/
+// https://dn720308.ca.archive.org/0/items/valda_berattelser_2304_librivox/valdaberattelser_01_lagerlof_128kb.mp3 To download test svenska file!.

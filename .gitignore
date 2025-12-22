@@ -3,3 +3,4 @@ Transcriber.Core/debug/*
 Transcriber.Core/obj/*
 Transcriber.Core/.vs/*
 /TestAudios/*
+/Models
