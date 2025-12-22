@@ -1,0 +1,5 @@
+Transcriber.Core/bin/*
+Transcriber.Core/debug/*
+Transcriber.Core/obj/*
+Transcriber.Core/.vs/*
+/TestAudios/*
