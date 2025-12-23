@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
-using Whisper.net.Ggml;
 using Whisper.net;
+using Whisper.net.Ggml;
 using Whisper.net.Wave;
 
 namespace Transcriber.Core
@@ -16,7 +17,7 @@ namespace Transcriber.Core
         VeryGood
     }
 
-    internal class TestKBLibTranscription
+    internal class Transcriptor
     {
         public GgmlType ggmlType { get; set; }
         public string modelFileName { get; set; }
@@ -27,7 +28,7 @@ namespace Transcriber.Core
         private Dictionary<ModelAccuracy, string> normalModels;
         private Dictionary<ModelAccuracy, string> quantizedModels;
 
-        public TestKBLibTranscription()
+        public Transcriptor()
         {
             ggmlType = GgmlType.Base;
             SwModelsFolder = "C:\\Users\\javier.kipen\\Documents\\GitHub\\LST\\Models\\KBLab\\";
@@ -56,7 +57,7 @@ namespace Transcriber.Core
             modelFileName = SwModelsFolder + normalModels[DefaultAccuracy];
         }
 
-        async public Task<string> RunTest(string wavFileName, ModelAccuracy? accuracy = null, bool? speedBoost = null)
+        async public Task<string> RunTest(string audioFilePath, ModelAccuracy? accuracy = null, bool? speedBoost = null)
         {
             var selectedAccuracy = accuracy ?? DefaultAccuracy;
             var useQuantizedModel = speedBoost ?? UseQuantized;
@@ -70,8 +71,8 @@ namespace Transcriber.Core
                 .WithLanguage("sv")
                 .Build();
 
-            var samples = await GetAvgSamplesWav(wavFileName);
-            
+            var samples = (audioFilePath.EndsWith(".wav")) ? (await GetAvgSamplesWav(audioFilePath)) : (WhisperAudioPreprocessor.LoadAsMono16kFloatSamples(audioFilePath));
+
             StringBuilder result = new StringBuilder();
             await foreach (var segment in processor.ProcessAsync(samples))
             {
@@ -98,6 +99,7 @@ namespace Transcriber.Core
             return samples;
         }
     }
+
     
 
 
