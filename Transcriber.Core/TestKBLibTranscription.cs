@@ -77,6 +77,35 @@ namespace Transcriber.Core
             progressPercentage = 0.0;
         }
 
+        public Transcriptor(string customModelPath)
+        {
+            ggmlType = GgmlType.Base;
+            SwModelsFolder = Path.GetDirectoryName(customModelPath) + "\\";
+            
+            // Use only the custom model file
+            var modelFile = Path.GetFileName(customModelPath);
+            normalModels = new Dictionary<ModelAccuracy, string>
+            {
+                { ModelAccuracy.VeryLow, modelFile },
+                { ModelAccuracy.Low, modelFile },
+                { ModelAccuracy.Medium, modelFile },
+                { ModelAccuracy.Good, modelFile },
+                { ModelAccuracy.VeryGood, modelFile }
+            };
+
+            quantizedModels = normalModels;
+
+            DefaultAccuracy = ModelAccuracy.Low;
+            UseQuantized = false;
+            
+            modelFileName = customModelPath;
+            
+            transcriptionResult = new StringBuilder();
+            isProcessing = false;
+            isComplete = false;
+            progressPercentage = 0.0;
+        }
+
         public async Task SetupRun(string audioFilePath, ModelAccuracy? accuracy = null, bool? speedBoost = null)
         {
             if (isProcessing)
@@ -94,7 +123,39 @@ namespace Transcriber.Core
 
             currentAudioFilePath = audioFilePath;
 
-            whisperFactory = WhisperFactory.FromPath(selectedModelPath);
+            // Validate model file exists and is accessible
+            if (!File.Exists(selectedModelPath))
+            {
+                throw new FileNotFoundException($"Whisper model file not found at: {selectedModelPath}");
+            }
+
+            // Check if file is readable
+            try
+            {
+                using var testStream = File.OpenRead(selectedModelPath);
+                if (testStream.Length == 0)
+                {
+                    throw new InvalidOperationException($"Model file is empty: {selectedModelPath}");
+                }
+            }
+            catch (Exception ex) when (ex is not FileNotFoundException)
+            {
+                throw new InvalidOperationException($"Cannot access model file: {selectedModelPath}. Error: {ex.Message}", ex);
+            }
+
+            // Try loading with better error context
+            try
+            {
+                whisperFactory = WhisperFactory.FromPath(selectedModelPath);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to load Whisper model from: {selectedModelPath}\n" +
+                    $"File size: {new FileInfo(selectedModelPath).Length} bytes\n" +
+                    $"Error: {ex.Message}",
+                    ex);
+            }
 
             processor = whisperFactory.CreateBuilder()
                 .WithLanguage("sv")

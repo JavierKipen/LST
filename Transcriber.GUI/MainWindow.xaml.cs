@@ -4,7 +4,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
-using Transcriber.Core;
 
 namespace Transcriber.GUI
 {
@@ -14,7 +13,6 @@ namespace Transcriber.GUI
     public partial class MainWindow : Window
     {
         private string? selectedFilePath;
-        private Transcriptor? transcriptor;
         private Stopwatch? processingStopwatch;
 
         public MainWindow()
@@ -65,56 +63,64 @@ namespace Transcriber.GUI
                 // Get selected accuracy
                 var selectedItem = (ComboBoxItem)AccuracyComboBox.SelectedItem;
                 var accuracyTag = selectedItem.Tag.ToString();
-                ModelAccuracy accuracy = accuracyTag switch
-                {
-                    "VeryLow" => ModelAccuracy.VeryLow,
-                    "Low" => ModelAccuracy.Low,
-                    "Medium" => ModelAccuracy.Medium,
-                    "Good" => ModelAccuracy.Good,
-                    "VeryGood" => ModelAccuracy.VeryGood,
-                    _ => ModelAccuracy.Low
-                };
 
-                // Create transcriptor and setup
-                transcriptor = new Transcriptor();
-                await transcriptor.SetupRun(selectedFilePath, accuracy, false);
-
-                ProgressStatusText.Text = "Transcribing...";
-                
                 // Start timing
                 processingStopwatch = Stopwatch.StartNew();
 
-                // Start processing in background
-                var processingTask = transcriptor.ProcessAsync();
-
-                // Update progress in a loop
-                int updateCount = 0;
-                while (!transcriptor.IsComplete)
+                // WORKAROUND: Shell out to console app which doesn't have WPF native library loading issues
+                string outputPath = Path.ChangeExtension(selectedFilePath, ".txt");
+                
+                var startInfo = new ProcessStartInfo
                 {
-                    double progress = transcriptor.Progress;
-                    TranscriptionProgressBar.Value = progress;
-                    ProgressPercentageText.Text = $"{progress:F1}%";
-                    
-                    // Update ETA every 5 iterations (every 500ms) and only after 5% progress
-                    if (updateCount % 5 == 0 && progress > 5.0)
+                    FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Transcriber.Core.exe"),
+                    Arguments = $"--cli --audio \"{selectedFilePath}\" --accuracy {accuracyTag} --output \"{outputPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                using var process = new Process { StartInfo = startInfo };
+                process.Start();
+
+                ProgressStatusText.Text = "Transcribing...";
+
+                // Read progress updates
+                int updateCount = 0;
+                while (!process.HasExited)
+                {
+                    string? line = await process.StandardOutput.ReadLineAsync();
+                    if (line != null)
                     {
-                        UpdateETA(progress);
+                        if (line.StartsWith("PROGRESS:"))
+                        {
+                            if (double.TryParse(line.Substring(9), out double progress))
+                            {
+                                TranscriptionProgressBar.Value = progress;
+                                ProgressPercentageText.Text = $"{progress:F1}%";
+                                
+                                if (updateCount % 5 == 0 && progress > 5.0)
+                                {
+                                    UpdateETA(progress);
+                                }
+                                updateCount++;
+                            }
+                        }
+                        else if (line.StartsWith("OUTPUT:"))
+                        {
+                            outputPath = line.Substring(7);
+                        }
                     }
-                    
-                    updateCount++;
-                    await Task.Delay(100); // Update every 100ms
                 }
 
-                // Wait for completion
-                await processingTask;
+                await process.WaitForExitAsync();
                 processingStopwatch.Stop();
 
-                // Get result
-                string result = transcriptor.GetResult();
-
-                // Save to file
-                string outputPath = Path.ChangeExtension(selectedFilePath, ".txt");
-                await File.WriteAllTextAsync(outputPath, result);
+                if (process.ExitCode != 0)
+                {
+                    var error = await process.StandardError.ReadToEndAsync();
+                    throw new InvalidOperationException($"Transcription failed: {error}");
+                }
 
                 // Update UI
                 TranscriptionProgressBar.Value = 100;
@@ -127,7 +133,19 @@ namespace Transcriber.GUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred:\n{ex.Message}", "Error", 
+                // Enhanced error logging
+                var errorDetails = $"Error: {ex.Message}\n" +
+                                 $"Type: {ex.GetType().FullName}\n";
+                
+                if (ex.InnerException != null)
+                {
+                    errorDetails += $"\nInner Exception: {ex.InnerException.Message}";
+                }
+                
+                System.Diagnostics.Debug.WriteLine("=== ERROR ===");
+                System.Diagnostics.Debug.WriteLine(errorDetails);
+                
+                MessageBox.Show(errorDetails, "Detailed Error", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -136,10 +154,6 @@ namespace Transcriber.GUI
                 BrowseButton.IsEnabled = true;
                 TranscribeButton.IsEnabled = true;
                 AccuracyComboBox.IsEnabled = true;
-
-                // Clean up
-                transcriptor?.Dispose();
-                transcriptor = null;
                 processingStopwatch = null;
             }
         }
