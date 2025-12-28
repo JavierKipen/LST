@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="../Transcriber.GUI/Transcriber.GUI.csproj" Id="d056b44a-3e70-4329-a89e-188f261bd7fd" />
   <Project Path="Transcriber.Core.csproj" />
 </Solution>

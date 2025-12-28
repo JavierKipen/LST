@@ -17,7 +17,7 @@ namespace Transcriber.Core
         VeryGood
     }
 
-    internal class Transcriptor
+    public class Transcriptor
     {
         public GgmlType ggmlType { get; set; }
         public string modelFileName { get; set; }
@@ -27,6 +27,21 @@ namespace Transcriber.Core
 
         private Dictionary<ModelAccuracy, string> normalModels;
         private Dictionary<ModelAccuracy, string> quantizedModels;
+
+        private float[] audioSamples;
+        private WhisperFactory whisperFactory;
+        private WhisperProcessor processor;
+        private string currentAudioFilePath;
+        private StringBuilder transcriptionResult;
+        private bool isProcessing;
+        private bool isComplete;
+        private double progressPercentage;
+        private TimeSpan totalAudioDuration;
+        private TimeSpan processedAudioDuration;
+
+        public bool IsProcessing => isProcessing;
+        public bool IsComplete => isComplete;
+        public double Progress => progressPercentage;
 
         public Transcriptor()
         {
@@ -55,33 +70,134 @@ namespace Transcriber.Core
             UseQuantized = false;
             
             modelFileName = SwModelsFolder + normalModels[DefaultAccuracy];
+            
+            transcriptionResult = new StringBuilder();
+            isProcessing = false;
+            isComplete = false;
+            progressPercentage = 0.0;
         }
 
-        async public Task<string> RunTest(string audioFilePath, ModelAccuracy? accuracy = null, bool? speedBoost = null)
+        public async Task SetupRun(string audioFilePath, ModelAccuracy? accuracy = null, bool? speedBoost = null)
         {
+            if (isProcessing)
+            {
+                throw new InvalidOperationException("Cannot setup while processing is in progress");
+            }
+
+            Reset();
+
             var selectedAccuracy = accuracy ?? DefaultAccuracy;
             var useQuantizedModel = speedBoost ?? UseQuantized;
 
             var selectedModelDict = useQuantizedModel ? quantizedModels : normalModels;
             var selectedModelPath = SwModelsFolder + selectedModelDict[selectedAccuracy];
 
-            using var whisperFactory = WhisperFactory.FromPath(selectedModelPath);
+            currentAudioFilePath = audioFilePath;
 
-            using var processor = whisperFactory.CreateBuilder()
+            whisperFactory = WhisperFactory.FromPath(selectedModelPath);
+
+            processor = whisperFactory.CreateBuilder()
                 .WithLanguage("sv")
                 .Build();
 
-            var samples = (audioFilePath.EndsWith(".wav")) ? (await GetAvgSamplesWav(audioFilePath)) : (WhisperAudioPreprocessor.LoadAsMono16kFloatSamples(audioFilePath));
+            audioSamples = audioFilePath.EndsWith(".wav") 
+                ? await GetAvgSamplesWav(audioFilePath) 
+                : WhisperAudioPreprocessor.LoadAsMono16kFloatSamples(audioFilePath);
 
-            StringBuilder result = new StringBuilder();
-            await foreach (var segment in processor.ProcessAsync(samples))
+            totalAudioDuration = TimeSpan.FromSeconds(audioSamples.Length / 16000.0);
+            progressPercentage = 0.0;
+        }
+
+        public async Task ProcessAsync()
+        {
+            if (audioSamples == null || processor == null)
             {
-                string line = $"{segment.Start}->{segment.End}: {segment.Text}.\n";
-                //Console.WriteLine(line);
-                result.Append(line);
+                throw new InvalidOperationException("Must call SetupRun before ProcessAsync");
             }
 
-            return result.ToString();
+            if (isProcessing)
+            {
+                throw new InvalidOperationException("Processing is already in progress");
+            }
+
+            isProcessing = true;
+            isComplete = false;
+            transcriptionResult.Clear();
+            progressPercentage = 0.0;
+            processedAudioDuration = TimeSpan.Zero;
+
+            try
+            {
+                await foreach (var segment in processor.ProcessAsync(audioSamples))
+                {
+                    string line = $"{segment.Start}->{segment.End}: {segment.Text}.\n";
+                    transcriptionResult.Append(line);
+
+                    processedAudioDuration = segment.End;
+                    progressPercentage = Math.Min(100.0, (processedAudioDuration.TotalSeconds / totalAudioDuration.TotalSeconds) * 100.0);
+                }
+
+                progressPercentage = 100.0;
+                isComplete = true;
+            }
+            finally
+            {
+                isProcessing = false;
+            }
+        }
+
+        public void StartProcessing(string audioFilePath, ModelAccuracy? accuracy = null, bool? speedBoost = null)
+        {
+            Task.Run(async () =>
+            {
+                await SetupRun(audioFilePath, accuracy, speedBoost);
+                await ProcessAsync();
+            });
+        }
+
+        public string GetResult()
+        {
+            if (isProcessing)
+            {
+                throw new InvalidOperationException("Processing is still in progress. Wait until IsComplete is true.");
+            }
+
+            return transcriptionResult.ToString();
+        }
+
+        public double GetProgress()
+        {
+            return progressPercentage;
+        }
+
+        private void Reset()
+        {
+            transcriptionResult?.Clear();
+            isProcessing = false;
+            isComplete = false;
+            progressPercentage = 0.0;
+            processedAudioDuration = TimeSpan.Zero;
+            totalAudioDuration = TimeSpan.Zero;
+            
+            processor?.Dispose();
+            processor = null;
+            
+            whisperFactory?.Dispose();
+            whisperFactory = null;
+            
+            audioSamples = null;
+        }
+
+        public void Dispose()
+        {
+            Reset();
+        }
+
+        async public Task<string> RunTest(string audioFilePath, ModelAccuracy? accuracy = null, bool? speedBoost = null)
+        {
+            await SetupRun(audioFilePath, accuracy, speedBoost);
+            await ProcessAsync();
+            return GetResult();
         }
 
         async public Task<float[]> GetAvgSamplesWav(string wavFileName)
@@ -99,7 +215,6 @@ namespace Transcriber.Core
             return samples;
         }
     }
-
     
 
 
