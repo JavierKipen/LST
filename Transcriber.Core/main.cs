@@ -110,14 +110,17 @@ namespace Transcriber.Core
                 
                 Console.WriteLine($"PROGRESS:100");
                 
-                if (string.IsNullOrEmpty(outputFile))
+                // Send result back to GUI via stdout (Base64 encoded to handle multi-line text)
+                string encodedResult = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(result));
+                Console.WriteLine($"RESULT:{encodedResult}");
+                
+                // Only write to file if output path was specified (for backward compatibility)
+                if (!string.IsNullOrEmpty(outputFile))
                 {
-                    outputFile = Path.ChangeExtension(audioFile, ".txt");
+                    await File.WriteAllTextAsync(outputFile, result);
+                    Console.WriteLine($"OUTPUT:{outputFile}");
                 }
                 
-                await File.WriteAllTextAsync(outputFile, result);
-                
-                Console.WriteLine($"OUTPUT:{outputFile}");
                 Console.WriteLine("COMPLETE");
                 
                 Environment.Exit(0);

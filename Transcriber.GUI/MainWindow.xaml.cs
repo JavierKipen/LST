@@ -67,13 +67,11 @@ namespace Transcriber.GUI
                 // Start timing
                 processingStopwatch = Stopwatch.StartNew();
 
-                // WORKAROUND: Shell out to console app which doesn't have WPF native library loading issues
-                string outputPath = Path.ChangeExtension(selectedFilePath, ".txt");
-                
+                // Call worker process WITHOUT specifying output file (result will come via stdout)
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Transcriber.Core.exe"),
-                    Arguments = $"--cli --audio \"{selectedFilePath}\" --accuracy {accuracyTag} --output \"{outputPath}\"",
+                    Arguments = $"--cli --audio \"{selectedFilePath}\" --accuracy {accuracyTag}",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
@@ -85,8 +83,10 @@ namespace Transcriber.GUI
 
                 ProgressStatusText.Text = "Transcribing...";
 
-                // Read progress updates
+                // Read progress updates and result
                 int updateCount = 0;
+                string? transcriptionResult = null;
+                
                 while (!process.HasExited)
                 {
                     string? line = await process.StandardOutput.ReadLineAsync();
@@ -106,9 +106,12 @@ namespace Transcriber.GUI
                                 updateCount++;
                             }
                         }
-                        else if (line.StartsWith("OUTPUT:"))
+                        else if (line.StartsWith("RESULT:"))
                         {
-                            outputPath = line.Substring(7);
+                            // Decode Base64 result
+                            string encodedResult = line.Substring(7); //Loads after result!
+                            byte[] resultBytes = Convert.FromBase64String(encodedResult);
+                            transcriptionResult = Encoding.UTF8.GetString(resultBytes);
                         }
                     }
                 }
@@ -122,14 +125,28 @@ namespace Transcriber.GUI
                     throw new InvalidOperationException($"Transcription failed: {error}");
                 }
 
+                if (string.IsNullOrEmpty(transcriptionResult))
+                {
+                    throw new InvalidOperationException("No transcription result received from worker process");
+                }
+
                 // Update UI
                 TranscriptionProgressBar.Value = 100;
                 ProgressPercentageText.Text = "100%";
                 ProgressStatusText.Text = "Complete!";
                 ETAText.Text = $"Completed in {FormatTime(processingStopwatch.Elapsed)}";
 
-                MessageBox.Show($"Transcription saved to:\n{outputPath}", "Success", 
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                // POST-PROCESS THE TRANSCRIPTION RESULT HERE
+                string processedResult = PostProcessTranscription(transcriptionResult);
+
+                // Save the processed result
+                string outputPath = Path.ChangeExtension(selectedFilePath, ".txt");
+                await File.WriteAllTextAsync(outputPath, processedResult);
+
+                MessageBox.Show($"Transcription saved to:\n{outputPath}\n\nOriginal length: {transcriptionResult.Length} chars\nProcessed length: {processedResult.Length} chars", 
+                    "Success", 
+                    MessageBoxButton.OK, 
+                    MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -156,6 +173,60 @@ namespace Transcriber.GUI
                 AccuracyComboBox.IsEnabled = true;
                 processingStopwatch = null;
             }
+        }
+
+        /// <summary>
+        /// Post-process the transcription result before saving.
+        /// Customize this method to add your own processing logic!
+        /// </summary>
+        private string PostProcessTranscription(string rawTranscription)
+        {
+            // Example post-processing operations:
+            
+            // 1. Remove extra whitespace
+            var lines = rawTranscription.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            
+            // 2. Trim each line
+            for (int i = 0; i < lines.Length; i++)
+            {
+                lines[i] = lines[i].Trim();
+            }
+            
+            // 3. Add a header with metadata
+            var processed = new StringBuilder();
+            processed.AppendLine("=== TRANSCRIPTION ===");
+            processed.AppendLine($"File: {Path.GetFileName(selectedFilePath)}");
+            processed.AppendLine($"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            processed.AppendLine($"Duration: {processingStopwatch?.Elapsed.ToString(@"hh\:mm\:ss")}");
+            processed.AppendLine();
+            processed.AppendLine("=== CONTENT ===");
+            processed.AppendLine();
+            
+            // 4. Add the cleaned content
+            foreach (var line in lines)
+            {
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    processed.AppendLine(line);
+                }
+            }
+            
+            // 5. Add footer
+            processed.AppendLine();
+            processed.AppendLine("=== END OF TRANSCRIPTION ===");
+            
+            // TODO: Add your custom post-processing here!
+            // Examples:
+            // - Remove filler words (um, uh, etc.)
+            // - Fix common transcription errors
+            // - Add speaker labels
+            // - Format timestamps
+            // - Translate text
+            // - Run spell check
+            // - Extract keywords
+            // - Generate summary
+            
+            return processed.ToString();
         }
 
         private void UpdateETA(double currentProgress)
