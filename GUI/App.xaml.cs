@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace Transcriber.GUI
+namespace GUI
 {
     /// <summary>
     /// Interaction logic for App.xaml

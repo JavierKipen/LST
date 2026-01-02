@@ -1,8 +1,0 @@
-{
-  "runtimeOptions": {
-    "includedFrameworks": [],
-    "configProperties": {
-      "System.Runtime.InteropServices.RuntimeInformation.RelativePathToLib": "runtimes/win-x64"
-    }
-  }
-}

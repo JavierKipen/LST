@@ -4,7 +4,7 @@ Transcriber.Core/obj/*
 Transcriber.Core/.vs/*
 /TestAudios/*
 /Models
-Transcriber.GUI/bin/*
-Transcriber.GUI/debug/*
-Transcriber.GUI/obj/*
-Transcriber.GUI/.vs/*
+GUI/bin/*
+GUI/debug/*
+GUI/obj/*
+GUI/.vs/*

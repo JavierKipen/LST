@@ -12,7 +12,8 @@ namespace LST.Terminal
         {
 
             // Original test code
-            string audioFile = "C:\\Users\\javier.kipen\\Documents\\GitHub\\LST\\TestAudios\\Svenska\\SvRadio\\Intervju_ex4.wav";
+            //string audioFile = "C:\\Users\\javier.kipen\\Documents\\GitHub\\LST\\TestAudios\\Svenska\\SvRadio\\Intervju_ex4.wav";
+            string audioFile = "C:\\Users\\javier.kipen\\Downloads\\ekots_lordagsintervju_industriarbetsgivarnas_vd_ing_20251212_1649143123.mp3";
 
             Console.WriteLine("=== Testing Async processing ===\n");
 
