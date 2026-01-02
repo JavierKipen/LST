@@ -13,6 +13,7 @@ namespace Transcriber.GUI
     public partial class MainWindow : Window
     {
         private string? selectedFilePath;
+        private Transcriptor? transcriptor;
         private Stopwatch? processingStopwatch;
 
         public MainWindow()
@@ -63,71 +64,60 @@ namespace Transcriber.GUI
                 // Get selected accuracy
                 var selectedItem = (ComboBoxItem)AccuracyComboBox.SelectedItem;
                 var accuracyTag = selectedItem.Tag.ToString();
+                ModelAccuracy accuracy = accuracyTag switch
+                {
+                    "VeryLow" => ModelAccuracy.VeryLow,
+                    "Low" => ModelAccuracy.Low,
+                    "Medium" => ModelAccuracy.Medium,
+                    "Good" => ModelAccuracy.Good,
+                    "VeryGood" => ModelAccuracy.VeryGood,
+                    _ => ModelAccuracy.Low
+                };
 
                 // Start timing
                 processingStopwatch = Stopwatch.StartNew();
 
-                // Call worker process WITHOUT specifying output file (result will come via stdout)
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Transcriber.Core.exe"),
-                    Arguments = $"--cli --audio \"{selectedFilePath}\" --accuracy {accuracyTag}",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-
-                using var process = new Process { StartInfo = startInfo };
-                process.Start();
-
-                ProgressStatusText.Text = "Transcribing...";
-
-                // Read progress updates and result
-                int updateCount = 0;
+                // Run transcription on background thread to avoid UI thread issues
                 string? transcriptionResult = null;
                 
-                while (!process.HasExited)
+                await Task.Run(async () =>
                 {
-                    string? line = await process.StandardOutput.ReadLineAsync();
-                    if (line != null)
+                    transcriptor = new Transcriptor();
+                    await transcriptor.SetupRun(selectedFilePath, accuracy, false);
+                    
+                    ProgressStatusText.Dispatcher.Invoke(() => 
+                        ProgressStatusText.Text = "Transcribing...");
+                    
+                    var processingTask = transcriptor.ProcessAsync();
+                    
+                    // Update progress
+                    while (!transcriptor.IsComplete)
                     {
-                        if (line.StartsWith("PROGRESS:"))
+                        double progress = transcriptor.Progress;
+                        
+                        TranscriptionProgressBar.Dispatcher.Invoke(() =>
                         {
-                            if (double.TryParse(line.Substring(9), out double progress))
-                            {
-                                TranscriptionProgressBar.Value = progress;
-                                ProgressPercentageText.Text = $"{progress:F1}%";
-                                
-                                if (updateCount % 5 == 0 && progress > 5.0)
-                                {
-                                    UpdateETA(progress);
-                                }
-                                updateCount++;
-                            }
-                        }
-                        else if (line.StartsWith("RESULT:"))
+                            TranscriptionProgressBar.Value = progress;
+                            ProgressPercentageText.Text = $"{progress:F1}%";
+                        });
+                        
+                        if (progress > 5.0)
                         {
-                            // Decode Base64 result
-                            string encodedResult = line.Substring(7); //Loads after result!
-                            byte[] resultBytes = Convert.FromBase64String(encodedResult);
-                            transcriptionResult = Encoding.UTF8.GetString(resultBytes);
+                            Dispatcher.Invoke(() => UpdateETA(progress));
                         }
+                        
+                        await Task.Delay(100);
                     }
-                }
+                    
+                    await processingTask;
+                    transcriptionResult = transcriptor.GetResult();
+                });
 
-                await process.WaitForExitAsync();
                 processingStopwatch.Stop();
-
-                if (process.ExitCode != 0)
-                {
-                    var error = await process.StandardError.ReadToEndAsync();
-                    throw new InvalidOperationException($"Transcription failed: {error}");
-                }
 
                 if (string.IsNullOrEmpty(transcriptionResult))
                 {
-                    throw new InvalidOperationException("No transcription result received from worker process");
+                    throw new InvalidOperationException("No transcription result generated");
                 }
 
                 // Update UI
@@ -136,7 +126,7 @@ namespace Transcriber.GUI
                 ProgressStatusText.Text = "Complete!";
                 ETAText.Text = $"Completed in {FormatTime(processingStopwatch.Elapsed)}";
 
-                // POST-PROCESS THE TRANSCRIPTION RESULT HERE
+                // POST-PROCESS THE TRANSCRIPTION RESULT
                 string processedResult = PostProcessTranscription(transcriptionResult);
 
                 // Save the processed result
@@ -171,6 +161,10 @@ namespace Transcriber.GUI
                 BrowseButton.IsEnabled = true;
                 TranscribeButton.IsEnabled = true;
                 AccuracyComboBox.IsEnabled = true;
+                
+                // Clean up
+                transcriptor?.Dispose();
+                transcriptor = null;
                 processingStopwatch = null;
             }
         }
@@ -214,17 +208,6 @@ namespace Transcriber.GUI
             // 5. Add footer
             processed.AppendLine();
             processed.AppendLine("=== END OF TRANSCRIPTION ===");
-            
-            // TODO: Add your custom post-processing here!
-            // Examples:
-            // - Remove filler words (um, uh, etc.)
-            // - Fix common transcription errors
-            // - Add speaker labels
-            // - Format timestamps
-            // - Translate text
-            // - Run spell check
-            // - Extract keywords
-            // - Generate summary
             
             return processed.ToString();
         }
