@@ -87,7 +87,7 @@
                 Padding="40,15"
                 FontSize="16"
                 FontWeight="Bold"
-                Background="#4CAF50"
+                Background="#03A9F4"
                 Foreground="White"
                 BorderThickness="0"
                 Cursor="Hand"

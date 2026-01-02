@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>LST.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,5 +14,50 @@
     <PackageReference Include="Whisper.net" Version="1.9.0" />
     <PackageReference Include="Whisper.net.Runtime" Version="1.9.0" />
   </ItemGroup>
+
+  <!-- Include icon and logo files -->
+  <ItemGroup>
+    <Content Include="LST.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Resource Include="GUILogo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <!-- For single-file publish: Exclude Whisper.net native libraries from embedding -->
+  <ItemGroup>
+    <!-- Exclude native libraries from being embedded in single file -->
+    <ExcludeFromSingleFile Include="runtimes/**/*" />
+    <ExcludeFromSingleFile Include="Whisper.net.dll" />
+    <ExcludeFromSingleFile Include="whisper.dll" />
+    <ExcludeFromSingleFile Include="ggml*.dll" />
+  </ItemGroup>
+
+  <!-- Copy Models folder to output directory for local development -->
+  <Target Name="CopyModelsToOutput" AfterTargets="Build">
+    <ItemGroup>
+      <!-- Look for models in parent directory of project -->
+      <ModelFiles Include="$(MSBuildProjectDirectory)\..\Models\*.bin" />
+    </ItemGroup>
+    
+    <MakeDir Directories="$(OutDir)Models" Condition="'@(ModelFiles)' != ''" />
+    
+    <Copy SourceFiles="@(ModelFiles)" 
+          DestinationFolder="$(OutDir)Models\" 
+          SkipUnchangedFiles="true" 
+          Condition="'@(ModelFiles)' != ''" />
+    
+    <Message Text="Copied %(ModelFiles.RecursiveDir)%(ModelFiles.Filename)%(ModelFiles.Extension) to $(OutDir)Models\" 
+             Importance="high" 
+             Condition="'@(ModelFiles)' != ''" />
+    
+    <Message Text="Total: @(ModelFiles->Count()) model file(s) copied to $(OutDir)Models" 
+             Importance="high" 
+             Condition="'@(ModelFiles)' != ''" />
+    
+    <Warning Text="No model files found at: $(MSBuildProjectDirectory)\..\Models\. Please place .bin files there." 
+             Condition="'@(ModelFiles)' == ''" />
+  </Target>
 
 </Project>

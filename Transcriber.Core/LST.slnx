@@ -1,8 +1,5 @@
 <Solution>
   <Project Path="../GUI/GUI.csproj" Id="aafe8fd0-0c08-4b78-8605-06eeb51478d4" />
-  <Project Path="../Transcriber.GUI/LST.GUI.csproj" Id="d056b44a-3e70-4329-a89e-188f261bd7fd">
-    <BuildType Project="Debug" />
-  </Project>
   <Project Path="LST.Terminal.csproj">
     <BuildType Project="Debug" />
   </Project>

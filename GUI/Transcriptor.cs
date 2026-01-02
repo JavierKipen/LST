@@ -53,8 +53,21 @@ namespace Transcriptor
         public Transcriptor()
         {
             initTranscriptor();
-            SwModelsFolder = "C:\\Users\\javier.kipen\\Documents\\GitHub\\LST\\Models\\KBLab\\";
-            modelFileName = SwModelsFolder + normalModels[DefaultAccuracy]; //Default path of models init initialization
+            
+            // Get the application installation directory
+            string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            SwModelsFolder = Path.Combine(appDirectory, "Models") + Path.DirectorySeparatorChar;
+            
+            // Verify Models folder exists
+            if (!Directory.Exists(SwModelsFolder))
+            {
+                throw new DirectoryNotFoundException(
+                    $"Models directory not found at: {SwModelsFolder}\n\n" +
+                    "The application installation appears to be corrupted or incomplete.\n" +
+                    "Please reinstall the application to download the required model files.");
+            }
+            
+            modelFileName = Path.Combine(SwModelsFolder, normalModels[DefaultAccuracy]);
         }
         public Transcriptor(string customModelPath)
         {
@@ -107,7 +120,14 @@ namespace Transcriptor
         {
             // Validate model file exists and is accessible
             if (!File.Exists(selectedModelPath))
-                throw new FileNotFoundException($"Whisper model file not found at: {selectedModelPath}");
+            {
+                throw new FileNotFoundException(
+                    $"Whisper model file not found at: {selectedModelPath}\n\n" +
+                    "The required model file is missing from your installation.\n" +
+                    "This may indicate a corrupted or incomplete installation.\n\n" +
+                    "Please reinstall the application to download all required model files.",
+                    selectedModelPath);
+            }
 
             // Check if file is readable
             try
@@ -130,7 +150,8 @@ namespace Transcriptor
                 throw new InvalidOperationException(
                     $"Failed to load Whisper model from: {selectedModelPath}\n" +
                     $"File size: {new FileInfo(selectedModelPath).Length} bytes\n" +
-                    $"Error: {ex.Message}",
+                    $"Error: {ex.Message}\n\n" +
+                    "If this problem persists, please reinstall the application.",
                     ex);
             }
         }

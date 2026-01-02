@@ -5,7 +5,7 @@
 #define MyAppName "LST"
 #define MyAppVersion "1.0"
 #define MyAppPublisher "JKFT"
-#define MyAppExeName "Transcriber.GUI.exe"
+#define MyAppExeName "GUI.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -39,7 +39,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\javier.kipen\Documents\GitHub\LST\Transcriber.GUI\bin\Release\net10.0-windows8.0\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\javier.kipen\Documents\GitHub\LST\GUI\bin\Release\net10.0-windows\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Use the "issigverify" flag or the "Hash" parameter to verify downloads
 Source: "https://huggingface.co/KBLab/kb-whisper-tiny/resolve/main/ggml-model.bin"; DestDir: "{app}\Models"; DestName: "kb-ggml-tiny.bin"; ExternalSize: "81788928"; Flags: ignoreversion external download
 Source: "https://huggingface.co/KBLab/kb-whisper-base/resolve/main/ggml-model.bin"; DestDir: "{app}\Models"; DestName: "kb-ggml-base.bin"; ExternalSize: "155189248"; Flags: ignoreversion external download
