@@ -40,6 +40,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "C:\Users\javier.kipen\Documents\GitHub\LST\GUI\bin\Release\net10.0-windows\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\javier.kipen\Documents\GitHub\LST\THIRD-PARTY SOFTWARE NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\javier.kipen\Documents\GitHub\LST\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\javier.kipen\Documents\GitHub\LST\LICENSES\*"; DestDir: "{app}\LICENSES"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Use the "issigverify" flag or the "Hash" parameter to verify downloads
 Source: "https://huggingface.co/KBLab/kb-whisper-tiny/resolve/main/ggml-model.bin"; DestDir: "{app}\Models"; DestName: "kb-ggml-tiny.bin"; ExternalSize: "81788928"; Flags: ignoreversion external download
 Source: "https://huggingface.co/KBLab/kb-whisper-base/resolve/main/ggml-model.bin"; DestDir: "{app}\Models"; DestName: "kb-ggml-base.bin"; ExternalSize: "155189248"; Flags: ignoreversion external download

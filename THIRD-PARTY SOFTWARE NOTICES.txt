@@ -1,0 +1,27 @@
+THIRD-PARTY SOFTWARE NOTICES
+============================
+
+This product bundles or downloads third-party software/components. The following notices are provided for informational and compliance purposes.
+
+1) Whisper.net (NuGet: Whisper.net 1.9.0, Whisper.net.Runtime 1.9.0)
+   Copyright (c) Sandro Hanea and contributors
+   License: MIT
+   Source: https://github.com/sandrohanea/whisper.net
+   License text: see LICENSES/MIT-Whisper.net.txt
+
+   Whisper.net.Runtime contains the native whisper.cpp library.
+   whisper.cpp License: MIT
+   Source: https://github.com/ggml-org/whisper.cpp
+
+2) NAudio (NuGet: NAudio 2.2.1)
+   Copyright (c) Mark Heath
+   License: MIT
+   Source: https://github.com/naudio/NAudio
+   License text: see LICENSES/MIT-NAudio.txt
+
+3) KB Whisper models (downloaded during installation / first run)
+   Provider: National Library of Sweden / KBLab
+   Models: kb-whisper-tiny/base/small/medium/large (GGML variants)
+   License: Apache License 2.0
+   Source: https://huggingface.co/KBLab/kb-whisper-small (and related size variants)
+   License text: see LICENSES/Apache-2.0.txt
