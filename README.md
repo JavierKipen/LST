@@ -162,3 +162,5 @@ Commercial use requires a separate license—contact: javier1kipen@gmail.com
 ## 💖 Donations
 Donations are welcome and help fund development and maintenance.
 Donations do not grant commercial-use rights; commercial use requires a separate license—contact: javier1kipen@gmail.com
+
+PayPal Link: https://www.paypal.com/donate/?hosted_button_id=YQLF4ET86YSBS
