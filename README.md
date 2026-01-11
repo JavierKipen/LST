@@ -13,6 +13,16 @@ Think of LST as a personal assistant that listens to your audio recordings and t
 
 LST will transform them into written text that you can read, edit, and share.
 
+## Download (Windows)
+Click to download the latest installer:
+https://github.com/JavierKipen/LST/releases/download/LST/LSTSetup.exe
+
+Release notes:
+https://github.com/JavierKipen/LST/releases/latest
+
+Installation: download the .exe, run it, and follow the installer.
+Note: do not use “Code → Download ZIP” (that is the source code).
+
 ## ✨ Key Features
 
 - **🔒 100% Private**: Everything happens on your computer - your audio never leaves your device
