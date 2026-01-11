@@ -37,6 +37,9 @@ A simple, easy-to-use application with buttons and a visual interface.
 - Progress bar showing how far along the transcription is
 - Automatic saving of results to a text file
 
+![Image1](Images/LST1.png)
+![Image2](Images/LST2.png)
+
 
 ## 🚀 Getting Started
 
