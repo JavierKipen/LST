@@ -3,45 +3,135 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LST – Offline Swedish Transcription</title>
+  <title>LST — Local Speech Transcriber</title>
+
+  <!-- Favicon (your Windows app icon) -->
+  <link rel="icon" href="./assets/LST.png" sizes="any">
+
   <style>
-    body { font-family: system-ui, Arial, sans-serif; max-width: 860px; margin: 48px auto; padding: 0 16px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; }
-    a.button { display: inline-block; padding: 12px 18px; border-radius: 10px; border: 1px solid #333; text-decoration: none; }
-    a.button:hover { opacity: 0.85; }
-    code { background: #f6f6f6; padding: 2px 6px; border-radius: 6px; }
+    :root{
+      --bg: #0b1020;
+      --panel: #101a33;
+      --panel2: #0e1730;
+      --text: #e6edf3;
+      --muted: #a6b0c3;
+      --accent: #7dbbff;     /* light blue */
+      --accent2: #5aa8ff;
+      --border: rgba(255,255,255,.10);
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+    }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 15% 10%, rgba(125,187,255,.18), transparent 55%),
+                  radial-gradient(900px 600px at 85% 15%, rgba(90,168,255,.14), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 56px 18px; }
+    .hero{
+      display:flex; gap:18px; align-items:center;
+      padding: 22px 22px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+    }
+    .icon{
+      width:64px; height:64px; flex: 0 0 64px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      display:flex; align-items:center; justify-content:center;
+      border: 1px solid var(--border);
+    }
+    .icon img{ width:48px; height:48px; }
+    h1{ margin: 0; font-size: 30px; letter-spacing: .2px; }
+    .tag{ margin-top: 6px; color: var(--muted); line-height: 1.45; }
+
+    .grid{ display:grid; grid-template-columns: 1.2fr .8fr; gap:18px; margin-top:18px; }
+    @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(16,26,51,.85), rgba(14,23,48,.85));
+      box-shadow: var(--shadow);
+      padding: 18px 18px;
+    }
+    .card h2{ margin: 0 0 10px; font-size: 18px; }
+    .card p, .card li{ color: var(--muted); line-height: 1.55; }
+    ul{ margin: 10px 0 0 18px; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      text-decoration:none;
+      font-weight: 650;
+      color: #071023;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: 0 10px 22px rgba(90,168,255,.18);
+      transition: transform .08s ease, opacity .08s ease;
+      width: 100%;
+    }
+    .btn:hover{ transform: translateY(-1px); opacity: .98; }
+    .small{ font-size: 13px; color: var(--muted); margin-top: 10px; }
+    .links a{ color: var(--accent); text-decoration: none; }
+    .links a:hover{ text-decoration: underline; }
+    code{
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 8px;
+      color: var(--text);
+    }
   </style>
 </head>
+
 <body>
-  <h1>LST (Windows)</h1>
-  <p>Offline Swedish speech-to-text transcription. No cloud upload.</p>
+  <div class="wrap">
+    <div class="hero">
+      <div class="icon">
+        <!-- Uses your .ico as an image (works in most browsers); PNG is optional -->
+        <img src="./assets/app.ico" alt="LST icon">
+      </div>
+      <div>
+        <h1>LST — Local Speech Transcriber</h1>
+        <div class="tag">Offline Swedish speech-to-text transcription for interviews. No cloud upload.</div>
+      </div>
+    </div>
 
-  <div class="card">
-    <h2>Download</h2>
-    <p>
-      <a class="button"
-         href="https://github.com/JavierKipen/LST/releases/download/LST/LSTSetup.exe">
-        Download for Windows (latest)
-      </a>
-    </p>
-    <p>
-      If your browser shows a warning, choose <strong>Keep</strong> / <strong>More info → Run anyway</strong>
-      only if you trust this source.
-    </p>
-    <p>
-      Release notes: <a href="https://github.com/JavierKipen/LST/releases/latest">latest release</a>
-    </p>
+    <div class="grid">
+      <div class="card">
+        <h2>Why LST</h2>
+        <ul>
+          <li>Fully offline processing (suitable for sensitive interviews)</li>
+          <li>Optimized for Swedish long-form recordings</li>
+          <li>Simple Windows GUI: pick file → pick quality → transcribe</li>
+          <li>Exports plain text with timestamps</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Download (Windows)</h2>
+
+        <!-- IMPORTANT: keep the asset name stable across releases -->
+        <a class="btn" href="https://github.com/JavierKipen/LST/releases/latest/download/LSTSetup.exe">
+          Download latest installer
+        </a>
+
+        <div class="small">
+          After download: run the installer and follow the prompts.  
+          Note: do not use <code>Code → Download ZIP</code> (that’s the source code).
+        </div>
+
+        <div class="small links" style="margin-top:12px;">
+          <div><a href="https://github.com/JavierKipen/LST/releases/latest">Release notes</a></div>
+          <div><a href="https://github.com/JavierKipen/LST">Source code</a></div>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <h2>Install</h2>
-  <ol>
-    <li>Run the installer.</li>
-    <li>Open the app from Start Menu.</li>
-    <li>Select an audio file and a model, then transcribe.</li>
-  </ol>
-
-  <p style="margin-top: 28px;">
-    Source code: <a href="https://github.com/JavierKipen/LST">GitHub repository</a>
-  </p>
 </body>
 </html>
