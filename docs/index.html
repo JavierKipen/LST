@@ -6,11 +6,8 @@
   <title>LST — Local Speech Transcriber</title>
 
   <!-- Favicon -->
-  <link rel="icon" href="./assets/LST.ico?v=1" type="image/x-icon">
-  <link rel="icon" href="./assets/LST.png?v=1" type="image/png" sizes="32x32">
-
-  <!-- On-page icon -->
-  <img src="./assets/LST.png" alt="LST icon">
+  <link rel="icon" href="./assets/LST.ico?v=2" type="image/x-icon">
+  <link rel="icon" href="./assets/LST.png?v=2" type="image/png" sizes="32x32">
 
   <style>
     :root{
@@ -42,14 +39,17 @@
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       box-shadow: var(--shadow);
     }
+
+    /* Shrink the top-left icon block */
     .icon{
-      width:64px; height:64px; flex: 0 0 64px;
-      border-radius: 14px;
+      width:48px; height:48px; flex: 0 0 48px;
+      border-radius: 12px;
       background: rgba(255,255,255,.06);
       display:flex; align-items:center; justify-content:center;
       border: 1px solid var(--border);
     }
-    .icon img{ width:48px; height:48px; }
+    .icon img{ width:32px; height:32px; }
+
     h1{ margin: 0; font-size: 30px; letter-spacing: .2px; }
     .tag{ margin-top: 6px; color: var(--muted); line-height: 1.45; }
 
@@ -66,6 +66,7 @@
     .card h2{ margin: 0 0 10px; font-size: 18px; }
     .card p, .card li{ color: var(--muted); line-height: 1.55; }
     ul{ margin: 10px 0 0 18px; }
+
     .btn{
       display:inline-flex; align-items:center; justify-content:center;
       padding: 12px 16px;
@@ -80,6 +81,8 @@
       width: 100%;
     }
     .btn:hover{ transform: translateY(-1px); opacity: .98; }
+    .btn + .btn { margin-top: 10px; } /* spacing between Download + Donate */
+
     .small{ font-size: 13px; color: var(--muted); margin-top: 10px; }
     .links a{ color: var(--accent); text-decoration: none; }
     .links a:hover{ text-decoration: underline; }
@@ -97,8 +100,7 @@
   <div class="wrap">
     <div class="hero">
       <div class="icon">
-        <!-- Uses your .ico as an image (works in most browsers); PNG is optional -->
-        <img src="./assets/LST.ico" alt="LST icon">
+        <img src="./assets/LST.png" alt="LST icon">
       </div>
       <div>
         <h1>LST — Local Speech Transcriber</h1>
@@ -113,20 +115,27 @@
           <li>Fully offline processing (suitable for sensitive interviews)</li>
           <li>Optimized for Swedish long-form recordings</li>
           <li>Simple Windows GUI: pick file → pick quality → transcribe</li>
-          <li>Exports plain text with timestamps</li>
+	  <li>Exports plain text with timestamps</li>
         </ul>
+	<h2>License</h2>
+	<div class="small">
+          This project is licensed under the PolyForm Noncommercial License 1.0.0. Commercial use requires a separate license, contact: javier1kipen@gmail.com
+        </div>
       </div>
 
       <div class="card">
         <h2>Download (Windows)</h2>
 
-        <!-- IMPORTANT: keep the asset name stable across releases -->
         <a class="btn" href="https://github.com/JavierKipen/LST/releases/latest/download/LSTSetup.exe">
-          Download latest installer
+          Download installer
+        </a>
+
+        <a class="btn" href="https://www.paypal.com/donate/?hosted_button_id=YQLF4ET86YSBS" target="_blank" rel="noopener">
+          Donate (PayPal)
         </a>
 
         <div class="small">
-          After download: run the installer and follow the prompts.  
+          After download: run the installer and follow the prompts.
         </div>
 
         <div class="small links" style="margin-top:12px;">
